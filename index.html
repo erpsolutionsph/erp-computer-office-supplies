@@ -36,7 +36,7 @@
         <h2>ERP-grade technology and office supply services built for growing businesses.</h2>
         <p>From workstation deployment and managed IT support to office furniture and consumables, we equip your business with the tools it needs to perform at its best.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#quote">Request a Quote</a>
+          <button class="btn btn-primary" id="open-quote-modal" type="button">Request a Quote</button>
           <a class="btn btn-secondary" href="#services">View Services</a>
         </div>
       </div>
@@ -45,6 +45,31 @@
           <h3>Fast, tailored ERP office solutions</h3>
           <p>Industry-leading hardware sourcing, software support, and maintenance plans designed for SMBs.</p>
         </div>
+      </div>
+    </section>
+
+    <section id="quote" class="section quote-section">
+      <div class="section-header">
+        <p class="section-eyebrow">Request a Quote</p>
+        <h2>Create a professional quotation preview before you submit.</h2>
+      </div>
+      <div class="quote-grid quote-intro">
+        <div class="quote-panel">
+          <p>Open the quote builder to select products, preview images, choose quantities, and review an itemized quote before sending it.</p>
+          <button class="btn btn-primary" id="open-quote-modal-2" type="button">Open Quote Builder</button>
+        </div>
+        <aside class="quote-info">
+          <div class="quote-card">
+            <h3>How it works</h3>
+            <p>Choose products from our inventory, see the current unit price and item image, then preview the full quotation form in a modal before you submit.</p>
+            <ul>
+              <li>Photo preview for each product</li>
+              <li>Itemized quote review</li>
+              <li>Submit only after confirmation</li>
+            </ul>
+            <p>When you’re ready, send your quote request directly to erpsolutionsph@gmail.com.</p>
+          </div>
+        </aside>
       </div>
     </section>
 
@@ -119,57 +144,6 @@
       </div>
     </section>
 
-    <section id="quote" class="section quote-section">
-      <div class="section-header">
-        <p class="section-eyebrow">Request a Quote</p>
-        <h2>Build a custom quotation from our current inventory.</h2>
-      </div>
-      <div class="quote-grid">
-        <div class="quote-panel">
-          <p>Choose the items you want quoted and get an instant, itemized estimate using the latest sales price per piece from our inventory.</p>
-          <form class="quote-form" onsubmit="return false;">
-            <label>
-              Product
-              <select id="quote-product"></select>
-            </label>
-            <label>
-              Quantity
-              <input id="quote-quantity" type="number" min="1" value="1" />
-            </label>
-            <button class="btn btn-primary" id="add-quote-item" type="button">Add to Quote</button>
-          </form>
-          <div class="quote-summary">
-            <h3>Quote Summary</h3>
-            <table class="quote-table">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Qty</th>
-                  <th>Unit Price</th>
-                  <th>Line Total</th>
-                </tr>
-              </thead>
-              <tbody id="quote-items"></tbody>
-            </table>
-            <div class="quote-total">Estimated total: <strong id="quote-total">₱ 0.00</strong></div>
-          </div>
-        </div>
-        <aside class="quote-info">
-          <div class="quote-card">
-            <h3>How it works</h3>
-            <p>Select one or more products from our available inventory, choose the quantity you need, and we’ll calculate an itemized quotation for you instantly. Our pricing is based on the latest sales amount per piece in the ERP inventory.</p>
-            <ul>
-              <li>Professional itemized quote</li>
-              <li>Updated pricing from current inventory data</li>
-              <li>Easy to modify quantities before you submit</li>
-            </ul>
-            <p>When you’re ready, send us your quote summary via email or call us to confirm availability and delivery.</p>
-            <a class="btn btn-secondary" href="mailto:erpsolutionsph@gmail.com">Email Your Quote</a>
-          </div>
-        </aside>
-      </div>
-    </section>
-
     <section id="contact" class="section contact-section">
       <div class="contact-copy">
         <p class="section-eyebrow">Contact</p>
@@ -186,6 +160,63 @@
       </div>
     </section>
   </main>
+
+  <div class="modal-overlay hidden" id="quote-modal" aria-hidden="true">
+    <div class="modal">
+      <header class="modal-header">
+        <div>
+          <p class="section-eyebrow">Request a Quote</p>
+          <h2>Create your quotation</h2>
+        </div>
+        <button class="modal-close" id="close-quote-modal" type="button" aria-label="Close quote builder">×</button>
+      </header>
+      <div class="modal-body">
+        <div class="modal-left">
+          <div class="modal-product-card">
+            <img id="quote-product-image" src="assets/logo.jpg" alt="Product preview" />
+            <div class="modal-product-copy">
+              <h3 id="quote-product-name"></h3>
+              <p id="quote-product-desc"></p>
+              <p class="quote-product-price">Unit price: <strong id="quote-product-price">₱ 0.00</strong></p>
+            </div>
+          </div>
+          <form class="quote-form" onsubmit="return false;">
+            <label>
+              Product
+              <select id="quote-product"></select>
+            </label>
+            <label>
+              Quantity
+              <input id="quote-quantity" type="number" min="1" value="1" />
+            </label>
+            <button class="btn btn-primary" id="add-quote-item" type="button">Add to Quote</button>
+          </form>
+        </div>
+        <div class="modal-right">
+          <div class="quote-summary">
+            <h3>Quotation preview</h3>
+            <table class="quote-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Unit Price</th>
+                  <th>Line Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="quote-items"></tbody>
+            </table>
+            <div class="quote-total">Estimated total: <strong id="quote-total">₱ 0.00</strong></div>
+            <div class="quote-actions">
+              <button class="btn btn-secondary" id="clear-quote" type="button">Clear Quote</button>
+              <button class="btn btn-primary" id="email-quote" type="button">Email Quote</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="footer">
     <p>ERP Computer & Office Supplies Services &copy; 2026. Professional support for modern business operations.</p>

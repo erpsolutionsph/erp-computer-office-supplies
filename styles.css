@@ -274,7 +274,8 @@ main {
 }
 
 .quote-section {
-  margin-top: 3rem;
+  margin-top: 2rem;
+  scroll-margin-top: 120px;
 }
 
 .quote-grid {
@@ -291,7 +292,104 @@ main {
   border-radius: 22px;
   padding: 1.8rem;
 }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.88);
+  z-index: 50;
+  padding: 1.5rem;
+}
 
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal {
+  background: #08101f;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 28px;
+  width: min(1100px, 100%);
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  box-shadow: 0 36px 120px -50px rgba(0, 0, 0, 0.62);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.8rem 1.8rem 0;
+}
+
+.modal-close {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: transparent;
+  color: var(--text);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-body {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 1.5rem;
+  padding: 0 1.8rem 1.8rem;
+}
+
+.modal-left,
+.modal-right {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 24px;
+  padding: 1.6rem;
+}
+
+.modal-product-card {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.modal-product-card img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.modal-product-copy h3 {
+  margin: 0 0 0.6rem;
+}
+
+.quote-product-price {
+  margin: 0.8rem 0 0;
+  color: var(--muted);
+}
+
+.quote-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.quote-actions .btn {
+  min-width: 150px;
+}
+
+@media (max-width: 900px) {
+  .modal-body {
+    grid-template-columns: 1fr;
+  }
+}
 .quote-panel p,
 .quote-info p {
   color: var(--muted);

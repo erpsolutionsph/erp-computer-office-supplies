@@ -1,8 +1,8 @@
 const quoteProducts = [
-  { name: 'Battery', price: 1990.00, description: 'CSB HR 1221WF2 Battery — reliable UPS power backup for office systems' },
-  { name: 'Webcam', price: 3950.00, description: 'Logitech C920E 1080P HD Pro Webcam — professional video conferencing and recording' },
-  { name: 'USB Extender', price: 1500.00, description: 'UNITK Y278 USB 2.0 Active Extension Cable 10M — extended device reach for office workstations' },
-  { name: 'USB To serials', price: 1600.00, description: 'DT-5002A DTECH USB to RS232 Serial Cable — reliable legacy device connectivity' }
+  { name: 'Battery', price: 1990.00, description: 'CSB HR 1221WF2 Battery — reliable UPS power backup for office systems', image: 'assets/battery.jpg' },
+  { name: 'Webcam', price: 3950.00, description: 'Logitech C920E 1080P HD Pro Webcam — professional video conferencing and recording', image: 'assets/webcam-1.jpg' },
+  { name: 'USB Extender', price: 1500.00, description: 'UNITK Y278 USB 2.0 Active Extension Cable 10M — extended device reach for office workstations', image: 'assets/webcam-2.jpg' },
+  { name: 'USB To serials', price: 1600.00, description: 'DT-5002A DTECH USB to RS232 Serial Cable — reliable legacy device connectivity', image: 'assets/webcam-2.jpg' }
 ];
 
 const quoteState = {
@@ -20,6 +20,10 @@ function formatCurrency(value) {
 
 function renderQuoteProducts() {
   const select = document.getElementById('quote-product');
+  if (!select) {
+    return;
+  }
+
   select.innerHTML = '';
 
   quoteProducts.forEach(product => {
@@ -28,10 +32,59 @@ function renderQuoteProducts() {
     option.textContent = `${product.name} — ${formatCurrency(product.price)}`;
     select.appendChild(option);
   });
+
+  updateProductPreview();
+}
+
+function updateProductPreview() {
+  const productSelect = document.getElementById('quote-product');
+  if (!productSelect) {
+    return;
+  }
+
+  const productName = productSelect.value;
+  const product = quoteProducts.find(p => p.name === productName) || quoteProducts[0];
+
+  const imageEl = document.getElementById('quote-product-image');
+  if (imageEl) {
+    imageEl.src = product.image || 'assets/logo.jpg';
+    imageEl.alt = product.name;
+  }
+
+  const nameEl = document.getElementById('quote-product-name');
+  if (nameEl) {
+    nameEl.textContent = product.name;
+  }
+
+  const descEl = document.getElementById('quote-product-desc');
+  if (descEl) {
+    descEl.textContent = product.description;
+  }
+
+  const priceEl = document.getElementById('quote-product-price');
+  if (priceEl) {
+    priceEl.textContent = formatCurrency(product.price);
+  }
+}
+
+function openQuoteModal() {
+  const modal = document.getElementById('quote-modal');
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeQuoteModal() {
+  const modal = document.getElementById('quote-modal');
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
 }
 
 function renderQuoteItems() {
   const tbody = document.getElementById('quote-items');
+  if (!tbody) {
+    return;
+  }
+
   tbody.innerHTML = '';
   let total = 0;
 
@@ -78,9 +131,20 @@ function renderQuoteItems() {
     tbody.appendChild(tr);
   });
 
-  document.getElementById('quote-total').textContent = formatCurrency(total);
-  document.getElementById('email-quote').disabled = quoteState.items.length === 0;
-  document.getElementById('clear-quote').disabled = quoteState.items.length === 0;
+  const totalEl = document.getElementById('quote-total');
+  if (totalEl) {
+    totalEl.textContent = formatCurrency(total);
+  }
+
+  const emailQuoteButton = document.getElementById('email-quote');
+  if (emailQuoteButton) {
+    emailQuoteButton.disabled = quoteState.items.length === 0;
+  }
+
+  const clearQuoteButton = document.getElementById('clear-quote');
+  if (clearQuoteButton) {
+    clearQuoteButton.disabled = quoteState.items.length === 0;
+  }
 }
 
 function addQuoteItem() {
@@ -153,9 +217,50 @@ function emailQuote() {
 function initQuoteBuilder() {
   renderQuoteProducts();
   renderQuoteItems();
-  document.getElementById('add-quote-item').addEventListener('click', addQuoteItem);
-  document.getElementById('clear-quote').addEventListener('click', clearQuote);
-  document.getElementById('email-quote').addEventListener('click', emailQuote);
+
+  const addQuoteButton = document.getElementById('add-quote-item');
+  if (addQuoteButton) {
+    addQuoteButton.addEventListener('click', addQuoteItem);
+  }
+
+  const clearQuoteButton = document.getElementById('clear-quote');
+  if (clearQuoteButton) {
+    clearQuoteButton.addEventListener('click', clearQuote);
+  }
+
+  const emailQuoteButton = document.getElementById('email-quote');
+  if (emailQuoteButton) {
+    emailQuoteButton.addEventListener('click', emailQuote);
+  }
+
+  const quoteProductSelect = document.getElementById('quote-product');
+  if (quoteProductSelect) {
+    quoteProductSelect.addEventListener('change', updateProductPreview);
+  }
+
+  const openQuoteModalButton = document.getElementById('open-quote-modal');
+  if (openQuoteModalButton) {
+    openQuoteModalButton.addEventListener('click', openQuoteModal);
+  }
+
+  const openQuoteModalButton2 = document.getElementById('open-quote-modal-2');
+  if (openQuoteModalButton2) {
+    openQuoteModalButton2.addEventListener('click', openQuoteModal);
+  }
+
+  const closeQuoteModalButton = document.getElementById('close-quote-modal');
+  if (closeQuoteModalButton) {
+    closeQuoteModalButton.addEventListener('click', closeQuoteModal);
+  }
+
+  const modalOverlay = document.querySelector('.modal-overlay');
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', event => {
+      if (event.target === event.currentTarget) {
+        closeQuoteModal();
+      }
+    });
+  }
 }
 
 window.addEventListener('DOMContentLoaded', initQuoteBuilder);
