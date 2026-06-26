@@ -64,6 +64,59 @@ function updateQuoteMetadata() {
   }
 }
 
+let pdfLoaderPromise = null;
+
+function loadPdfLibrary(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      existing.onload = existing.onload || (() => resolve());
+      existing.onerror = existing.onerror || (() => reject(new Error(`Failed to load ${src}`)));
+      if (existing.readyState === 'complete' || existing.readyState === 'loaded') {
+        resolve();
+      }
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = false;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+function loadPdfLibraries() {
+  if (pdfLoaderPromise) {
+    return pdfLoaderPromise;
+  }
+
+  const sources = [
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js'
+  ];
+
+  const fallbackSources = [
+    'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js'
+  ];
+
+  pdfLoaderPromise = loadPdfLibrary(sources[0])
+    .then(() => loadPdfLibrary(sources[1]))
+    .catch(() => {
+      // Try fallback CDN if the first source fails
+      return loadPdfLibrary(fallbackSources[0])
+        .then(() => loadPdfLibrary(fallbackSources[1]));
+    })
+    .catch(error => {
+      pdfLoaderPromise = null;
+      throw error;
+    });
+
+  return pdfLoaderPromise;
+}
+
 function updateProductPreview() {
   const productSelect = document.getElementById('quote-product');
   if (!productSelect) {
@@ -237,9 +290,16 @@ function buildQuoteEmailBody() {
   lines.push(`Estimated total: ${totalText}`);
   lines.push('');
   lines.push('Please confirm availability, lead time, and delivery options.');
-  lines.push('Site: https://erpsolutionsph.github.io/erp-computer-office-supplies/');
 
   return encodeURIComponent(lines.join('\n'));
+}
+
+function getEmailAddress(value) {
+  if (!value) {
+    return '';
+  }
+  const emailMatch = value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return emailMatch ? emailMatch[0] : '';
 }
 
 function emailQuote() {
@@ -247,9 +307,18 @@ function emailQuote() {
     return;
   }
 
-  const subject = encodeURIComponent('Quotation Request — ERP Computer & Office Supplies Services');
+  updateQuoteMetadata();
+  const customerEmail = getEmailAddress(quoteState.customerContact);
+  const subject = encodeURIComponent('ERP Quotation');
   const body = buildQuoteEmailBody();
-  window.location.href = `mailto:erpsolutionsph@gmail.com?subject=${subject}&body=${body}`;
+
+  if (customerEmail) {
+    const mailto = `mailto:${encodeURIComponent(customerEmail)}?cc=${encodeURIComponent('erpsolutionsph@gmail.com')}&subject=${subject}&body=${body}`;
+    window.location.href = mailto;
+  } else {
+    const mailto = `mailto:erpsolutionsph@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = mailto;
+  }
 }
 
 function buildPdfQuote() {
@@ -262,104 +331,173 @@ function buildPdfQuote() {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const margin = 40;
   const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - 2 * margin;
+  const companyColor = [17, 89, 152];
+  const companyTextColor = 255;
+  const lineSpacing = 16;
 
+  const quoteNumber = `ERP${new Date().getTime().toString().slice(-6)}`;
+  const quoteDate = new Date().toLocaleDateString('en-PH');
+
+  doc.setFillColor(...companyColor);
+  doc.rect(0, 0, pageWidth, 100, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(24);
+  doc.setTextColor(...companyTextColor);
+  doc.text('ERP SOLUTIONS', margin, 52);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  const companyDetails = [
+    'B9 L33 Flourite St. Futura Homes',
+    'San Vicente, San Pedro, Laguna',
+    'Mobile: 09204906942',
+    'Email: erpsolutionsph@gmail.com'
+  ];
+  companyDetails.forEach((line, index) => {
+    doc.text(line, margin, 72 + lineSpacing * index);
+  });
+
+  doc.setTextColor(0);
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('ERP SOLUTIONS', margin, 60);
+  doc.text('QUOTATION', pageWidth - margin, 52, { align: 'right' });
 
-  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('B9 L33 FLOURITE ST. FUTURA HOMES', margin, 82);
-  doc.text('SAN VICENTE, SAN PEDRO, LAGUNA', margin, 96);
-  doc.text('MOBILE NO: 09204906942', margin, 110);
-  doc.text('EMAIL: erpsolutionsph@gmail.com', margin, 124);
-
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('QUOTATION', pageWidth - margin, 60, { align: 'right' });
-
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Date: ${new Date().toLocaleDateString('en-PH')}`, pageWidth - margin, 82, { align: 'right' });
-  doc.text('RFQ No: ERP0618', pageWidth - margin, 96, { align: 'right' });
+  doc.text(`Date: ${quoteDate}`, pageWidth - margin, 72, { align: 'right' });
+  doc.text(`Quote No: ${quoteNumber}`, pageWidth - margin, 88, { align: 'right' });
 
-  doc.setDrawColor(200);
-  doc.setFillColor(240);
-  doc.rect(margin, 145, pageWidth - margin * 2, 90, 'F');
+  const detailsTop = 120;
+  doc.setDrawColor(220);
+  doc.setLineWidth(0.5);
+  doc.line(margin, detailsTop, pageWidth - margin, detailsTop);
 
+  doc.setFillColor(245, 245, 245);
+  doc.roundedRect(margin, detailsTop + 10, contentWidth, 68, 6, 6, 'F');
+
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(17, 89, 152);
-  doc.text('Prepared for', margin + 8, 162);
+  doc.text('Prepared for', margin + 10, detailsTop + 28);
 
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(0);
   const customerName = quoteState.customerName || 'Customer name not provided';
   const customerContact = quoteState.customerContact || 'Contact not provided';
   const deliveryLocation = quoteState.deliveryLocation || 'Delivery location not provided';
 
-  doc.text(`Name: ${customerName}`, margin + 8, 178);
-  doc.text(`Contact: ${customerContact}`, margin + 8, 194);
-  doc.text(`Delivery: ${deliveryLocation}`, margin + 8, 210);
-  doc.text('Website: erpsolutionsph.github.io/erp-computer-office-supplies', margin + 8, 226);
+  doc.text(`Name: ${customerName}`, margin + 10, detailsTop + 46);
+  doc.text(`Contact: ${customerContact}`, margin + 10, detailsTop + 60);
+  doc.text(`Delivery: ${deliveryLocation}`, margin + 10, detailsTop + 74);
 
-  const tableBody = quoteState.items.map((item, index) => {
-    return [
-      index + 1,
-      item.name,
-      item.quantity,
-      'unit',
-      formatCurrency(item.price),
-      formatCurrency(item.price * item.quantity)
-    ];
-  });
+  const tableBody = quoteState.items.map((item, index) => [
+    index + 1,
+    item.name,
+    item.quantity,
+    'pcs',
+    formatCurrency(item.price),
+    formatCurrency(item.price * item.quantity)
+  ]);
 
   doc.autoTable({
-    head: [['#', 'Item Description', 'Qty', 'UOM', 'Unit Price', 'Total Amount']],
+    head: [['#', 'Description', 'Qty', 'UOM', 'Unit Price', 'Total']],
     body: tableBody,
-    startY: 235,
-    tableWidth: 'auto',
+    startY: detailsTop + 95,
+    theme: 'striped',
+    headStyles: {
+      fillColor: companyColor,
+      textColor: companyTextColor,
+      halign: 'center'
+    },
     styles: {
       font: 'helvetica',
-      fontSize: 9,
-      overflow: 'linebreak',
-      cellWidth: 'wrap'
+      fontSize: 10,
+      textColor: 50,
+      cellPadding: 6
     },
-    headStyles: { fillColor: [17, 89, 152], textColor: 255 },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245]
+    },
     columnStyles: {
-      0: { cellWidth: 28 },
-      1: { cellWidth: 220 },
-      2: { cellWidth: 40 },
-      3: { cellWidth: 40 },
-      4: { cellWidth: 68 },
-      5: { cellWidth: 70 }
+      0: { cellWidth: 28, halign: 'center' },
+      1: { cellWidth: 230 },
+      2: { cellWidth: 40, halign: 'center' },
+      3: { cellWidth: 40, halign: 'center' },
+      4: { cellWidth: 78, halign: 'right' },
+      5: { cellWidth: 78, halign: 'right' }
     }
   });
 
   const afterY = doc.lastAutoTable.finalY + 20;
-  const totalText = document.getElementById('quote-total') ? document.getElementById('quote-total').textContent : formatCurrency(0);
+  const totalAmount = document.getElementById('quote-total') ? document.getElementById('quote-total').textContent : formatCurrency(0);
 
-  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('TOTAL AMOUNT', pageWidth - margin - 180, afterY);
-  doc.text(totalText, pageWidth - margin, afterY, { align: 'right' });
+  doc.setFontSize(11);
+  doc.text('Subtotal', pageWidth - margin - 160, afterY);
+  doc.text(totalAmount, pageWidth - margin, afterY, { align: 'right' });
 
-  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text('Thank you for your request. Prices are subject to availability and confirmation.', margin, afterY + 30);
-  doc.text('Payment terms, leadtime and shipping fees will be confirmed upon order.', margin, afterY + 44);
-  doc.text('Updated site: erpsolutionsph.github.io/erp-computer-office-supplies', margin, afterY + 64);
+  doc.setFontSize(9);
+  doc.text('Prices valid for 7 days. Delivery and payment terms will be confirmed on order.', margin, afterY + 30);
+  doc.text('Thank you for considering ERP Solutions for your office and IT needs.', margin, afterY + 46);
+
+  doc.setDrawColor(220);
+  doc.line(margin, doc.internal.pageSize.getHeight() - 70, pageWidth - margin, doc.internal.pageSize.getHeight() - 70);
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text('ERP Solutions | erpsolutionsph@gmail.com | 09204906942 | erpsolutionsph.github.io/erp-computer-office-supplies', margin, doc.internal.pageSize.getHeight() - 50);
 
   return doc;
 }
 
-function downloadQuote() {
+async function downloadQuote() {
   if (quoteState.items.length === 0) {
     return;
   }
 
+  try {
+    await loadPdfLibraries();
+  } catch (error) {
+    alert('Unable to load PDF export tools. Please check your internet connection and try again.');
+    console.error(error);
+    return;
+  }
+
   const doc = buildPdfQuote();
-  if (doc) {
-    const filename = `ERP-Quotation-${new Date().toISOString().slice(0,10)}.pdf`;
-    doc.save(filename);
+  if (!doc) {
+    return;
+  }
+
+  const filename = `ERP-Quotation-${new Date().toISOString().slice(0,10)}.pdf`;
+
+  if (typeof doc.save === 'function') {
+    try {
+      doc.save(filename);
+      return;
+    } catch (saveError) {
+      console.warn('doc.save failed, falling back to Blob download', saveError);
+    }
+  }
+
+  try {
+    const pdfBlob = doc.output('blob') || new Blob([doc.output('arraybuffer')], { type: 'application/pdf' });
+    const url = URL.createObjectURL(pdfBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.type = 'application/pdf';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+  } catch (blobError) {
+    alert('Could not generate the PDF file. Please try again.');
+    console.error(blobError);
   }
 }
 
