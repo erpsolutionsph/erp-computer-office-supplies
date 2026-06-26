@@ -117,6 +117,27 @@ function loadPdfLibraries() {
   return pdfLoaderPromise;
 }
 
+function loadImageDataURL(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+      ctx.drawImage(image, 0, 0);
+      resolve(canvas.toDataURL('image/jpeg'));
+    };
+    image.onerror = () => reject(new Error(`Unable to load image: ${src}`));
+    image.src = src;
+  });
+}
+
 function updateProductPreview() {
   const productSelect = document.getElementById('quote-product');
   if (!productSelect) {
@@ -303,11 +324,13 @@ function getEmailAddress(value) {
 }
 
 function emailQuote() {
+  updateQuoteMetadata();
+
   if (quoteState.items.length === 0) {
+    alert('Please add at least one item to the quote before emailing.');
     return;
   }
 
-  updateQuoteMetadata();
   const customerEmail = getEmailAddress(quoteState.customerContact);
   const subject = encodeURIComponent('ERP Quotation');
   const body = buildQuoteEmailBody();
@@ -321,7 +344,7 @@ function emailQuote() {
   }
 }
 
-function buildPdfQuote() {
+function buildPdfQuote(logoDataUrl = null) {
   if (!window.jspdf || !window.jspdf.jsPDF) {
     alert('PDF generation library failed to load. Please refresh the page.');
     return null;
@@ -342,10 +365,18 @@ function buildPdfQuote() {
   doc.setFillColor(...companyColor);
   doc.rect(0, 0, pageWidth, 100, 'F');
 
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, 'JPEG', margin, 18, 80, 50);
+    } catch (imageError) {
+      console.warn('Unable to add logo to PDF:', imageError);
+    }
+  }
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(24);
-  doc.setTextColor(...companyTextColor);
-  doc.text('ERP SOLUTIONS', margin, 52);
+  doc.setTextColor(companyTextColor);
+  doc.text('ERP SOLUTIONS', margin + (logoDataUrl ? 100 : 0), 52);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
@@ -375,7 +406,7 @@ function buildPdfQuote() {
   doc.line(margin, detailsTop, pageWidth - margin, detailsTop);
 
   doc.setFillColor(245, 245, 245);
-  doc.roundedRect(margin, detailsTop + 10, contentWidth, 68, 6, 6, 'F');
+  doc.rect(margin, detailsTop + 10, contentWidth, 68, 'F');
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
@@ -400,6 +431,11 @@ function buildPdfQuote() {
     formatCurrency(item.price),
     formatCurrency(item.price * item.quantity)
   ]);
+
+  if (typeof doc.autoTable !== 'function') {
+    alert('PDF table generation is unavailable. Please refresh the page and try again.');
+    return null;
+  }
 
   doc.autoTable({
     head: [['#', 'Description', 'Qty', 'UOM', 'Unit Price', 'Total']],
@@ -447,13 +483,16 @@ function buildPdfQuote() {
   doc.line(margin, doc.internal.pageSize.getHeight() - 70, pageWidth - margin, doc.internal.pageSize.getHeight() - 70);
   doc.setFontSize(9);
   doc.setTextColor(100);
-  doc.text('ERP Solutions | erpsolutionsph@gmail.com | 09204906942 | erpsolutionsph.github.io/erp-computer-office-supplies', margin, doc.internal.pageSize.getHeight() - 50);
+  doc.text('ERP Solutions | erpsolutionsph@gmail.com | 09204906942', margin, doc.internal.pageSize.getHeight() - 50);
 
   return doc;
 }
 
 async function downloadQuote() {
+  updateQuoteMetadata();
+
   if (quoteState.items.length === 0) {
+    alert('Please add at least one item to the quote before downloading.');
     return;
   }
 
@@ -465,7 +504,8 @@ async function downloadQuote() {
     return;
   }
 
-  const doc = buildPdfQuote();
+  const logoDataUrl = await loadImageDataURL('assets/logo.jpg').catch(() => null);
+  const doc = buildPdfQuote(logoDataUrl);
   if (!doc) {
     return;
   }
@@ -570,4 +610,8 @@ function initQuoteBuilder() {
   }
 }
 
-window.addEventListener('DOMContentLoaded', initQuoteBuilder);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initQuoteBuilder);
+} else {
+  initQuoteBuilder();
+}
