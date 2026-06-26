@@ -131,6 +131,21 @@ main {
   margin-top: 1.8rem;
 }
 
+.hero-update {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.hero-update a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.hero-update a:hover {
+  text-decoration: underline;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -418,7 +433,11 @@ main {
   color: var(--text);
 }
 
-.quote-table {
+.quote-form input::placeholder {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+..quote-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1.5rem;
@@ -427,15 +446,37 @@ main {
 .quote-table th,
 .quote-table td {
   text-align: left;
-  padding: 0.9rem 0.75rem;
+  padding: 0.85rem 0.75rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.12);
   font-size: 0.95rem;
 }
 
 .quote-table th {
   color: var(--muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.quote-prepared {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.quote-details {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1rem 0.75rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  color: var(--text);
+}
+
+.quote-details strong {
+  color: var(--text);
 }
 
 .quote-summary {
@@ -446,6 +487,7 @@ main {
   margin-top: 1rem;
   color: var(--text);
   font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .quote-card h3 {
@@ -501,6 +543,34 @@ main {
   width: min(1200px, calc(100% - 2rem));
   text-align: center;
   color: var(--muted);
+}
+
+.footer-update {
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.footer-update a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.footer-update a:hover {
+  text-decoration: underline;
+}
+
+.footer-update {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.footer-update a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.footer-update a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 860px) {

@@ -6,7 +6,10 @@ const quoteProducts = [
 ];
 
 const quoteState = {
-  items: []
+  items: [],
+  customerName: '',
+  customerContact: '',
+  deliveryLocation: ''
 };
 
 function formatCurrency(value) {
@@ -34,6 +37,31 @@ function renderQuoteProducts() {
   });
 
   updateProductPreview();
+}
+
+function updateQuoteMetadata() {
+  const nameInput = document.getElementById('quote-customer-name');
+  const contactInput = document.getElementById('quote-customer-contact');
+  const deliveryInput = document.getElementById('quote-delivery-location');
+
+  quoteState.customerName = nameInput ? nameInput.value.trim() : '';
+  quoteState.customerContact = contactInput ? contactInput.value.trim() : '';
+  quoteState.deliveryLocation = deliveryInput ? deliveryInput.value.trim() : '';
+
+  const preparedFor = document.getElementById('quote-prepared-for');
+  if (preparedFor) {
+    preparedFor.textContent = quoteState.customerName || 'Enter customer details above';
+  }
+
+  const quoteContact = document.getElementById('quote-contact');
+  if (quoteContact) {
+    quoteContact.textContent = quoteState.customerContact || 'Not specified';
+  }
+
+  const quoteDelivery = document.getElementById('quote-delivery');
+  if (quoteDelivery) {
+    quoteDelivery.textContent = quoteState.deliveryLocation || 'Not specified';
+  }
 }
 
 function updateProductPreview() {
@@ -136,6 +164,8 @@ function renderQuoteItems() {
     totalEl.textContent = formatCurrency(total);
   }
 
+  updateQuoteMetadata();
+
   const emailQuoteButton = document.getElementById('email-quote');
   if (emailQuoteButton) {
     emailQuoteButton.disabled = quoteState.items.length === 0;
@@ -153,6 +183,8 @@ function addQuoteItem() {
   if (!productName || quantity < 1) {
     return;
   }
+
+  updateQuoteMetadata();
 
   const product = quoteProducts.find(p => p.name === productName);
   if (!product) {
@@ -197,10 +229,15 @@ function buildQuoteEmailBody() {
   });
 
   lines.push('');
+  lines.push(`Customer: ${quoteState.customerName || 'N/A'}`);
+  lines.push(`Contact: ${quoteState.customerContact || 'N/A'}`);
+  lines.push(`Delivery Location: ${quoteState.deliveryLocation || 'N/A'}`);
+  lines.push('');
   const totalText = document.getElementById('quote-total') ? document.getElementById('quote-total').textContent : formatCurrency(0);
   lines.push(`Estimated total: ${totalText}`);
   lines.push('');
   lines.push('Please confirm availability, lead time, and delivery options.');
+  lines.push('Site: https://erpsolutionsph.github.io/erp-computer-office-supplies/');
 
   return encodeURIComponent(lines.join('\n'));
 }
@@ -215,29 +252,103 @@ function emailQuote() {
   window.location.href = `mailto:erpsolutionsph@gmail.com?subject=${subject}&body=${body}`;
 }
 
-function buildQuoteDocument() {
-  const quoteLines = [
-    'ERP Computer & Office Supplies Services',
-    'Quotation Document',
-    '',
-    `Date: ${new Date().toLocaleDateString('en-PH')}`,
-    '',
-    'Itemized Quote:',
-    ''
-  ];
+function buildPdfQuote() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert('PDF generation library failed to load. Please refresh the page.');
+    return null;
+  }
 
-  quoteState.items.forEach(item => {
-    const lineTotal = item.price * item.quantity;
-    quoteLines.push(`${item.name} — Qty: ${item.quantity} — Unit: ${formatCurrency(item.price)} — Total: ${formatCurrency(lineTotal)}`);
+  const jsPDF = window.jspdf.jsPDF;
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const margin = 40;
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('ERP SOLUTIONS', margin, 60);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('B9 L33 FLOURITE ST. FUTURA HOMES', margin, 82);
+  doc.text('SAN VICENTE, SAN PEDRO, LAGUNA', margin, 96);
+  doc.text('MOBILE NO: 09204906942', margin, 110);
+  doc.text('EMAIL: erpsolutionsph@gmail.com', margin, 124);
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('QUOTATION', pageWidth - margin, 60, { align: 'right' });
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Date: ${new Date().toLocaleDateString('en-PH')}`, pageWidth - margin, 82, { align: 'right' });
+  doc.text('RFQ No: ERP0618', pageWidth - margin, 96, { align: 'right' });
+
+  doc.setDrawColor(200);
+  doc.setFillColor(240);
+  doc.rect(margin, 145, pageWidth - margin * 2, 90, 'F');
+
+  doc.setFontSize(10);
+  doc.setTextColor(17, 89, 152);
+  doc.text('Prepared for', margin + 8, 162);
+
+  doc.setTextColor(0);
+  const customerName = quoteState.customerName || 'Customer name not provided';
+  const customerContact = quoteState.customerContact || 'Contact not provided';
+  const deliveryLocation = quoteState.deliveryLocation || 'Delivery location not provided';
+
+  doc.text(`Name: ${customerName}`, margin + 8, 178);
+  doc.text(`Contact: ${customerContact}`, margin + 8, 194);
+  doc.text(`Delivery: ${deliveryLocation}`, margin + 8, 210);
+  doc.text('Website: erpsolutionsph.github.io/erp-computer-office-supplies', margin + 8, 226);
+
+  const tableBody = quoteState.items.map((item, index) => {
+    return [
+      index + 1,
+      item.name,
+      item.quantity,
+      'unit',
+      formatCurrency(item.price),
+      formatCurrency(item.price * item.quantity)
+    ];
   });
 
-  const totalText = document.getElementById('quote-total') ? document.getElementById('quote-total').textContent : formatCurrency(0);
-  quoteLines.push('');
-  quoteLines.push(`Estimated total: ${totalText}`);
-  quoteLines.push('');
-  quoteLines.push('Thank you for requesting a quotation. Please contact us for availability and delivery options.');
+  doc.autoTable({
+    head: [['#', 'Item Description', 'Qty', 'UOM', 'Unit Price', 'Total Amount']],
+    body: tableBody,
+    startY: 235,
+    tableWidth: 'auto',
+    styles: {
+      font: 'helvetica',
+      fontSize: 9,
+      overflow: 'linebreak',
+      cellWidth: 'wrap'
+    },
+    headStyles: { fillColor: [17, 89, 152], textColor: 255 },
+    columnStyles: {
+      0: { cellWidth: 28 },
+      1: { cellWidth: 220 },
+      2: { cellWidth: 40 },
+      3: { cellWidth: 40 },
+      4: { cellWidth: 68 },
+      5: { cellWidth: 70 }
+    }
+  });
 
-  return quoteLines.join('\n');
+  const afterY = doc.lastAutoTable.finalY + 20;
+  const totalText = document.getElementById('quote-total') ? document.getElementById('quote-total').textContent : formatCurrency(0);
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TOTAL AMOUNT', pageWidth - margin - 180, afterY);
+  doc.text(totalText, pageWidth - margin, afterY, { align: 'right' });
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Thank you for your request. Prices are subject to availability and confirmation.', margin, afterY + 30);
+  doc.text('Payment terms, leadtime and shipping fees will be confirmed upon order.', margin, afterY + 44);
+  doc.text('Updated site: erpsolutionsph.github.io/erp-computer-office-supplies', margin, afterY + 64);
+
+  return doc;
 }
 
 function downloadQuote() {
@@ -245,16 +356,11 @@ function downloadQuote() {
     return;
   }
 
-  const documentText = buildQuoteDocument();
-  const blob = new Blob([documentText], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'ERP-quote.txt';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  const doc = buildPdfQuote();
+  if (doc) {
+    const filename = `ERP-Quotation-${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(filename);
+  }
 }
 
 function initQuoteBuilder() {
@@ -284,6 +390,21 @@ function initQuoteBuilder() {
   const quoteProductSelect = document.getElementById('quote-product');
   if (quoteProductSelect) {
     quoteProductSelect.addEventListener('change', updateProductPreview);
+  }
+
+  const quoteCustomerName = document.getElementById('quote-customer-name');
+  if (quoteCustomerName) {
+    quoteCustomerName.addEventListener('input', updateQuoteMetadata);
+  }
+
+  const quoteCustomerContact = document.getElementById('quote-customer-contact');
+  if (quoteCustomerContact) {
+    quoteCustomerContact.addEventListener('input', updateQuoteMetadata);
+  }
+
+  const quoteDeliveryLocation = document.getElementById('quote-delivery-location');
+  if (quoteDeliveryLocation) {
+    quoteDeliveryLocation.addEventListener('input', updateQuoteMetadata);
   }
 
   const openQuoteModalButton = document.getElementById('open-quote-modal');

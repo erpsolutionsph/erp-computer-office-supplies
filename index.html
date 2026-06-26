@@ -39,6 +39,7 @@
           <button class="btn btn-primary" id="open-quote-modal" type="button">Request a Quote</button>
           <a class="btn btn-secondary" href="#services">View Services</a>
         </div>
+        <p class="hero-update">Updated site: <a href="https://erpsolutionsph.github.io/erp-computer-office-supplies/" target="_blank" rel="noopener">erpsolutionsph.github.io/erp-computer-office-supplies</a></p>
       </div>
       <div class="hero-visual">
         <div class="hero-card">
@@ -164,12 +165,29 @@
               Quantity
               <input id="quote-quantity" type="number" min="1" value="1" />
             </label>
+            <label>
+              Customer / Company
+              <input id="quote-customer-name" type="text" placeholder="e.g. ABC Trading Co." />
+            </label>
+            <label>
+              Contact Email or Phone
+              <input id="quote-customer-contact" type="text" placeholder="e.g. jane@company.com / 0927 123 4567" />
+            </label>
+            <label>
+              Delivery Location
+              <input id="quote-delivery-location" type="text" placeholder="e.g. San Pedro, Laguna" />
+            </label>
             <button class="btn btn-primary" id="add-quote-item" type="button">Add to Quote</button>
           </form>
         </div>
         <div class="modal-right">
           <div class="quote-summary">
             <h3>Quotation preview</h3>
+            <div class="quote-prepared">Prepared for: <strong id="quote-prepared-for">Enter customer details above</strong></div>
+            <div class="quote-details">
+              <div><strong>Contact:</strong> <span id="quote-contact">Not specified</span></div>
+              <div><strong>Delivery:</strong> <span id="quote-delivery">Not specified</span></div>
+            </div>
             <table class="quote-table">
               <thead>
                 <tr>
@@ -185,7 +203,7 @@
             <div class="quote-total">Estimated total: <strong id="quote-total">₱ 0.00</strong></div>
             <div class="quote-actions">
               <button class="btn btn-secondary" id="clear-quote" type="button">Clear Quote</button>
-              <button class="btn btn-secondary" id="download-quote" type="button">Download Quote</button>
+              <button class="btn btn-secondary" id="download-quote" type="button">Download PDF</button>
               <button class="btn btn-primary" id="email-quote" type="button">Email Quote</button>
             </div>
           </div>
@@ -195,8 +213,11 @@
   </div>
 
   <footer class="footer">
-    <p>ERP Computer & Office Supplies Services &copy; 2026. Professional support for modern business operations.</p>
+    <p class="footer-update">Updated site: <a href="https://erpsolutionsph.github.io/erp-computer-office-supplies/" target="_blank" rel="noopener">erpsolutionsph.github.io/erp-computer-office-supplies</a></p>
+    <p>ERP Computer & Office Supplies Services © 2026. Professional support for modern business operations.</p>
   </footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
