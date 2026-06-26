@@ -273,6 +273,131 @@ main {
   color: var(--muted);
 }
 
+.quote-section {
+  margin-top: 3rem;
+}
+
+.quote-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 1.8rem;
+  margin-top: 1.8rem;
+}
+
+.quote-panel,
+.quote-info {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 22px;
+  padding: 1.8rem;
+}
+
+.quote-panel p,
+.quote-info p {
+  color: var(--muted);
+}
+
+.quote-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.quote-form label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.quote-form select,
+.quote-form input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--text);
+}
+
+.quote-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.quote-table th,
+.quote-table td {
+  text-align: left;
+  padding: 0.9rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  font-size: 0.95rem;
+}
+
+.quote-table th {
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.quote-summary {
+  margin-top: 1.5rem;
+}
+
+.quote-total {
+  margin-top: 1rem;
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.quote-card h3 {
+  margin-top: 0;
+}
+
+.quote-card ul {
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+}
+
+.quote-card li {
+  margin-bottom: 0.7rem;
+}
+
+.quote-info .btn-secondary {
+  width: auto;
+  margin-top: 1rem;
+}
+
+.quote-item-remove {
+  background: transparent;
+  border: none;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.quote-item-remove:hover {
+  color: var(--text);
+}
+
+.quote-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.quote-actions .btn {
+  min-width: 150px;
+}
+
+.quote-empty {
+  margin-top: 1rem;
+  color: var(--muted);
+}
+
 .footer {
   margin: 4rem auto 2rem;
   width: min(1200px, calc(100% - 2rem));
