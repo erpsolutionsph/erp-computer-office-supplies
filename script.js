@@ -197,7 +197,8 @@ function buildQuoteEmailBody() {
   });
 
   lines.push('');
-  lines.push(`Estimated total: ${document.getElementById('quote-total').textContent}`);
+  const totalText = document.getElementById('quote-total') ? document.getElementById('quote-total').textContent : formatCurrency(0);
+  lines.push(`Estimated total: ${totalText}`);
   lines.push('');
   lines.push('Please confirm availability, lead time, and delivery options.');
 
@@ -214,6 +215,48 @@ function emailQuote() {
   window.location.href = `mailto:erpsolutionsph@gmail.com?subject=${subject}&body=${body}`;
 }
 
+function buildQuoteDocument() {
+  const quoteLines = [
+    'ERP Computer & Office Supplies Services',
+    'Quotation Document',
+    '',
+    `Date: ${new Date().toLocaleDateString('en-PH')}`,
+    '',
+    'Itemized Quote:',
+    ''
+  ];
+
+  quoteState.items.forEach(item => {
+    const lineTotal = item.price * item.quantity;
+    quoteLines.push(`${item.name} — Qty: ${item.quantity} — Unit: ${formatCurrency(item.price)} — Total: ${formatCurrency(lineTotal)}`);
+  });
+
+  const totalText = document.getElementById('quote-total') ? document.getElementById('quote-total').textContent : formatCurrency(0);
+  quoteLines.push('');
+  quoteLines.push(`Estimated total: ${totalText}`);
+  quoteLines.push('');
+  quoteLines.push('Thank you for requesting a quotation. Please contact us for availability and delivery options.');
+
+  return quoteLines.join('\n');
+}
+
+function downloadQuote() {
+  if (quoteState.items.length === 0) {
+    return;
+  }
+
+  const documentText = buildQuoteDocument();
+  const blob = new Blob([documentText], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'ERP-quote.txt';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function initQuoteBuilder() {
   renderQuoteProducts();
   renderQuoteItems();
@@ -226,6 +269,11 @@ function initQuoteBuilder() {
   const clearQuoteButton = document.getElementById('clear-quote');
   if (clearQuoteButton) {
     clearQuoteButton.addEventListener('click', clearQuote);
+  }
+
+  const downloadQuoteButton = document.getElementById('download-quote');
+  if (downloadQuoteButton) {
+    downloadQuoteButton.addEventListener('click', downloadQuote);
   }
 
   const emailQuoteButton = document.getElementById('email-quote');
